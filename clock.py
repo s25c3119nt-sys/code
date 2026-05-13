@@ -11,14 +11,13 @@ def draw_hand(angle, length_scale):
 
     max_width = int(8 * length_scale)
 
-    # ===== 中身を完全塗り =====
     for y in range(top_y, bottom_y):
         if y < mid_y:
-            # 上（三角）
+            # 上
             t = (y - top_y) / (mid_y - top_y)
             half_width = int(max_width * t)
         else:
-            # 下（逆三角）
+            # 下
             t = (y - mid_y) / (bottom_y - mid_y)
             half_width = int(max_width * (1 - t))
 
@@ -30,7 +29,7 @@ def draw_hand(angle, length_scale):
         line.setRotationCenter(cx, cy)
         line.rotate(angle)
 
-    # ===== 外枠 =====
+    #外枠
     points = [
         (cx, top_y),
         (cx - max_width, mid_y),
