@@ -62,7 +62,7 @@ def draw():
 
     # 水
     t = date.second + date.milli_second / 1000
-    ratio = s / 60
+    ratio = m / 60
 
     cx = 150
     cy = 150
@@ -136,7 +136,7 @@ def draw():
         pflag = True
 
 if __name__ == "__main__":
-    window = Window(300, 300).title("Clock").background(color(250,250,250))
+    window = Window(300, 300).title("Clock").background(color(244,234,222))
     date = Date()
     player = loadMusic("water.mp3")
     pflag = True
