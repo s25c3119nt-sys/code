@@ -111,7 +111,7 @@ def draw():
         tick.setRotationCenter(150, 150)
         tick.rotate(i * 360 / 12)
 
-    draw_hand(h * 30, 0.6)   # 短針
+    draw_hand((h + m / 60) * 30, 0.6)   # 短針
     draw_hand(m * 6, 1.0)    # 長針
 
     #秒針
