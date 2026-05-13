@@ -1,6 +1,55 @@
 from citam_pydraw import *
 import math
 
+def draw_hand(angle, length_scale):
+    cx = 150
+    cy = 150
+
+    top_y = cy - int(110 * length_scale)
+    mid_y = cy - int(20 * length_scale)
+    bottom_y = cy + int(30 * length_scale)
+
+    max_width = int(8 * length_scale)
+
+    # ===== 中身を完全塗り =====
+    for y in range(top_y, bottom_y):
+        if y < mid_y:
+            # 上（三角）
+            t = (y - top_y) / (mid_y - top_y)
+            half_width = int(max_width * t)
+        else:
+            # 下（逆三角）
+            t = (y - mid_y) / (bottom_y - mid_y)
+            half_width = int(max_width * (1 - t))
+
+        x1 = cx - half_width
+        x2 = cx + half_width
+
+        line = Line(x1, y, x2, y, 2)
+        line.fill(color(47, 73, 110))
+        line.setRotationCenter(cx, cy)
+        line.rotate(angle)
+
+    # ===== 外枠 =====
+    points = [
+        (cx, top_y),
+        (cx - max_width, mid_y),
+        (cx, bottom_y),
+        (cx + max_width, mid_y)
+    ]
+
+    for i in range(len(points)):
+        x1, y1 = points[i]
+        x2, y2 = points[(i+1) % len(points)]
+
+        outline = Line(x1, y1, x2, y2, 3)
+        outline.fill(color(47, 73, 110))
+        outline.setRotationCenter(cx, cy)
+        outline.rotate(angle)
+
+
+
+
 @animation(True)
 def draw():
     h = date.hour
@@ -49,30 +98,12 @@ def draw():
     dial.noFill()
     dial.outlineFill(color(0, 0, 0))
 
-    #短針
-    min = Line(150, 150, 150, 10, 4)
-    min.fill(color(0, 0, 0))
-    min.setRotationCenter(150, 150)
-    min.rotate(m*360/60)
-
-    #長針
-    hou = Line(150, 150, 150, 50, 6)
-    hou.fill(color(0, 0, 0))
-    hou.setRotationCenter(150, 150)
-    hou.rotate(h*360/12)
-
-    #秒針
-    byo = Line(150, 150, 150, 10, 2)
-    byo.fill(color(0, 0, 0))
-    byo.setRotationCenter(150, 150)
-    byo.rotate(s*360/60)
-
+    #3,6,9,12
     text12 = Text("12", 150, 20)
     text3 = Text("3", 280, 150)
     text6 = Text("6", 150, 280)
     text9 = Text("9", 20, 150)
-
-    # 目盛り（1〜11）
+    # 目盛り（上記以外）
     for i in range(1, 12):
         if i == 3 or i == 6 or i == 9:
             continue
@@ -80,6 +111,19 @@ def draw():
         tick = Line(150, 20, 150, 40, 2)
         tick.setRotationCenter(150, 150)
         tick.rotate(i * 360 / 12)
+
+    draw_hand(h * 30, 0.6)   # 短針
+    draw_hand(m * 6, 1.0)    # 長針
+
+    #秒針
+    byo = Line(150, 150, 150, 20, 2)
+    byo.fill(color(237, 140, 114))
+    byo.setRotationCenter(150, 150)
+    byo.rotate(s*360/60)
+
+    
+
+    
 
     global pflag
     s = date.second
