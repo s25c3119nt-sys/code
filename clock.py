@@ -111,6 +111,19 @@ def draw():
         tick.setRotationCenter(150, 150)
         tick.rotate(i * 360 / 12)
 
+    for i in range(60):
+
+        # 大目盛りと重複回避
+        if i % 5 == 0:
+            continue
+
+        small_tick = Line(150, 28, 150, 36, 1)
+
+        small_tick.fill(color(120, 120, 120))
+
+        small_tick.setRotationCenter(150, 150)
+        small_tick.rotate(i * 6)
+
     draw_hand((h + m / 60) * 30, 0.6)   # 短針
     draw_hand(m * 6, 1.0)    # 長針
 
