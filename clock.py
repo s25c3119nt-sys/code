@@ -1,23 +1,41 @@
 from citam_pydraw import *
 import math
 
-def draw_hand(angle, length_scale):
-    cx = 150
-    cy = 150
+alarm_time = input("アラーム時刻(HH:MM): ")
 
-    top_y = cy - int(110 * length_scale)
-    mid_y = cy - int(20 * length_scale)
-    bottom_y = cy + int(30 * length_scale)
+ALARM_HOUR = int(alarm_time.split(":")[0])
+ALARM_MINUTE = int(alarm_time.split(":")[1])
+
+alarm_triggered = False
+alarm_start_second = 0
+
+date = Date()
+
+START_TIME = (
+    date.hour * 3600
+    + date.minute * 60
+    + date.second
+)
+
+CLOCK_X = 200
+CLOCK_Y = 200
+CLOCK_R = 180
+
+def draw_hand(angle, length_scale):
+    cx = CLOCK_X
+    cy = CLOCK_Y
+
+    bottom_y = cy
+    mid_y = cy - int(35 * length_scale)
+    top_y = cy - int(180 * length_scale)
 
     max_width = int(8 * length_scale)
 
     for y in range(top_y, bottom_y):
         if y < mid_y:
-            # 上
             t = (y - top_y) / (mid_y - top_y)
             half_width = int(max_width * t)
         else:
-            # 下
             t = (y - mid_y) / (bottom_y - mid_y)
             half_width = int(max_width * (1 - t))
 
@@ -29,7 +47,6 @@ def draw_hand(angle, length_scale):
         line.setRotationCenter(cx, cy)
         line.rotate(angle)
 
-    #外枠
     points = [
         (cx, top_y),
         (cx - max_width, mid_y),
@@ -39,7 +56,7 @@ def draw_hand(angle, length_scale):
 
     for i in range(len(points)):
         x1, y1 = points[i]
-        x2, y2 = points[(i+1) % len(points)]
+        x2, y2 = points[(i + 1) % len(points)]
 
         outline = Line(x1, y1, x2, y2, 3)
         outline.fill(color(47, 73, 110))
@@ -47,111 +64,148 @@ def draw_hand(angle, length_scale):
         outline.rotate(angle)
 
 
-
-
 @animation(True)
 def draw():
+    global alarm_triggered
+    global alarm_start_second
+
     h = date.hour
     m = date.minute
     s = date.second
+
     print("{}:{}:{}".format(h, m, s))
-    
-    Line(300, 150, 300, 150)
-    Line(300, 300, 300, 300)
+
+    Line(400, 200, 400, 200)
+    Line(400, 400, 400, 400)
+
+    now = h * 60 + m
+    alarm = ALARM_HOUR * 60 + ALARM_MINUTE
+
+    if now == alarm - 1:
+        if int(date.milli_second / 200) % 2 == 0:
+            water_color = color(250, 128, 114)
+        else:
+            water_color = color(255, 220, 100)
+    elif alarm - 3 <= now < alarm - 1:
+        water_color = color(250, 128, 114)
+    elif alarm - 10 <= now < alarm - 3:
+        water_color = color(255, 220, 100)
+    else:
+        water_color = color(120, 200, 255)
 
     # 水
-    t = date.second + date.milli_second / 1000
-    ratio = m / 60
 
-    cx = 150
-    cy = 150
-    r = 140
+    water_top = 0
+    water_bottom = 400
+    water_height = water_bottom - water_top
 
-    base_y = cy + r - (2 * r * ratio)
+    now_seconds = h * 3600 + m * 60 + s
+    alarm_seconds = ALARM_HOUR * 3600 + ALARM_MINUTE * 60
 
-    for x in range(10, 290, 2):
-        dx = x - cx
+    total_time = alarm_seconds - START_TIME
 
-        if dx*dx > r*r:
-            continue
+    if total_time <= 0:
+        total_time += 24 * 3600
 
-        # 円の上下
-        circle_top = cy - math.sqrt(r*r - dx*dx)
-        circle_bottom = cy + math.sqrt(r*r - dx*dx)
+    elapsed_time = now_seconds - START_TIME
 
-        # 波
-        wave = math.sin(t * 2 + x * 0.04) * 3
-        y = base_y + wave
+    if elapsed_time < 0:
+        elapsed_time += 24 * 3600
 
-        # 上も下も円の中に制限
-        if y < circle_top:
-            y = circle_top
-        if y > circle_bottom:
-            y = circle_bottom
+    # アラーム到達
+    if now_seconds >= alarm_seconds and not alarm_triggered:
+        alarm_triggered = True
+        alarm_start_second = now_seconds
 
-        water_line = Line(x, y, x, circle_bottom, 2)
-        water_line.fill(color(120, 200, 255))
+    # アラーム前
+    if not alarm_triggered:
 
-    #外枠
-    dial = Ellipse(150, 150, 280, 280)
+        ratio = elapsed_time / total_time
+
+        if ratio > 1:
+            ratio = 1
+
+    # アラーム後
+    else:
+
+        if now_seconds - alarm_start_second < 6:
+            ratio = 1.0
+        else:
+            ratio = 0.0
+
+    base_y = water_bottom - water_height * ratio
+
+    for x in range(0, 400, 2):
+
+        water_line = Line(
+            x,
+            base_y,
+            x,
+            water_bottom,
+            2
+        )
+
+        water_line.fill(water_color)
+    # 時計外枠
+    dial = Ellipse(CLOCK_X, CLOCK_Y, CLOCK_R * 2, CLOCK_R * 2)
     dial.noFill()
     dial.outlineFill(color(0, 0, 0))
 
-    #3,6,9,12
-    text12 = Text("12", 150, 20)
-    text3 = Text("3", 280, 150)
-    text6 = Text("6", 150, 280)
-    text9 = Text("9", 20, 150)
-    # 目盛り（上記以外）
+
+    # 数字
+    Text("12", CLOCK_X, 30)
+    Text("3", CLOCK_X + 170, CLOCK_Y)
+    Text("6", CLOCK_X, 370)
+    Text("9", CLOCK_X - 170, CLOCK_Y)
+
+    # アラーム表示
+    alarm_text = Text(
+        "ALARM {:02d}:{:02d}".format(
+            ALARM_HOUR,
+            ALARM_MINUTE
+        ),
+        320,
+        390
+    )
+
+
+    # 5分ごとの目盛り
     for i in range(1, 12):
         if i == 3 or i == 6 or i == 9:
             continue
 
-        tick = Line(150, 20, 150, 40, 2)
-        tick.setRotationCenter(150, 150)
+        tick = Line(CLOCK_X, 20, CLOCK_X, 50, 2)
+        tick.setRotationCenter(CLOCK_X, CLOCK_Y)
         tick.rotate(i * 360 / 12)
 
+    # 1分ごとの目盛り
     for i in range(60):
 
-        # 大目盛りと重複回避
         if i % 5 == 0:
             continue
 
-        small_tick = Line(150, 28, 150, 36, 1)
+        small_tick = Line(CLOCK_X, 30, CLOCK_X, 42, 1)
 
         small_tick.fill(color(120, 120, 120))
 
-        small_tick.setRotationCenter(150, 150)
+        small_tick.setRotationCenter(CLOCK_X, CLOCK_Y)
         small_tick.rotate(i * 6)
 
-    draw_hand((h + m / 60) * 30, 0.6)   # 短針
-    draw_hand(m * 6, 1.0)    # 長針
+    # 短針
+    draw_hand((h + m / 60 + s / 3600) * 30, 0.6)
 
-    #秒針
-    byo = Line(150, 150, 150, 20, 2)
+    # 長針
+    draw_hand((m + s / 60) * 6, 1.0)
+
+    # 秒針
+    byo = Line(CLOCK_X, CLOCK_Y, CLOCK_X, 30, 2)
     byo.fill(color(237, 140, 114))
-    byo.setRotationCenter(150, 150)
-    byo.rotate(s*360/60)
+    byo.setRotationCenter(CLOCK_X, CLOCK_Y)
+    byo.rotate(s * 6)
 
-    
-
-    
-
-    global pflag
-    s = date.second
-    #時報（1分毎に音を鳴らす）
-    if (int(s)%60 == 0) and pflag:#秒の値が0になった時という条件と最初の再生という条件
-        player.play()#音源ファイルを再生する
-        pflag = False #毎0秒で1回だけ再生する
-        #↑0秒だけど2回目以降はpflagがFalseになるので条件を満たさないから再生されない
-    elif (int(s)%60 != 0) and not pflag: 
-        pflag = True
 
 if __name__ == "__main__":
-    window = Window(300, 300).title("Clock").background(color(244,234,222))
-    date = Date()
-    player = loadMusic("water.mp3")
-    pflag = True
+    window = Window(400, 400).title("Clock").background(color(244, 234, 222))
     draw()
     window.show()
 
